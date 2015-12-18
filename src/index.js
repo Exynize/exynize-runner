@@ -16,6 +16,7 @@ const startRunner = (data) => Rx.Observable.create(obs => {
     tasks[data.id] = child;
     // listen for messages
     child.on('message', m => {
+        logger.debug('sending resp from', data.id, 'data: ', m);
         obs.onNext(m);
         if (m.type === 'done') {
             obs.onCompleted();
@@ -46,6 +47,7 @@ const listen = async () => {
     // bind to keys
     await channel.bindQueue(queue, rabbit.exchange, 'runner.execute.#');
     await channel.bindQueue(queue, rabbit.exchange, 'runner.kill.#');
+    await channel.bindQueue(queue, rabbit.exchange, 'runner.command.#');
     logger.debug('bound queue, consuming...');
     // listen for messages
     channel.consume(queue, (data) => {
@@ -61,6 +63,8 @@ const listen = async () => {
         } else if (data.fields.routingKey === 'runner.kill' && msg.id && tasks[msg.id]) {
             tasks[msg.id].kill();
             delete tasks[msg.id];
+        } else if (data.fields.routingKey === 'runner.command' && msg.id && tasks[msg.id]) {
+            tasks[msg.id].send(msg);
         }
         // acknowledge
         channel.ack(data);

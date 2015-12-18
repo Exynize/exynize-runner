@@ -4,7 +4,7 @@
   "description": "Exynize standalone component runner",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Tim Ermilov <yamalight@gmail.com> (http://codezen.net)",
@@ -26,6 +26,7 @@
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-es2015-node": "^5.0.1",
     "babel-preset-react": "^6.3.13",
-    "babel-preset-stage-1": "^6.3.13"
+    "babel-preset-stage-1": "^6.3.13",
+    "nodemon": "^1.8.1"
   }
 }
