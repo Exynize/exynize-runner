@@ -15,20 +15,14 @@ const startRunner = (data) => Rx.Observable.create(obs => {
     // store to running
     tasks[data.id] = child;
     // listen for messages
-    child.on('message', m => {
-        logger.debug('sending resp from', data.id, 'data: ', m);
-        obs.onNext(m);
-        if (m.type === 'done') {
+    child.on('message', response => {
+        logger.debug('sending resp from', data.id, 'data: ', response);
+        obs.onNext({id: data.id, response});
+        // only complete runner on test runs
+        if (response.type === 'done' && data.mode === 'test') {
             obs.onCompleted();
         }
     });
-    // return cleanup
-    return () => {
-        if (tasks[data.id]) {
-            tasks[data.id].kill();
-            delete tasks[data.id];
-        }
-    };
 });
 
 const listen = async () => {
@@ -56,9 +50,10 @@ const listen = async () => {
         // only run if has all needed fields
         if (data.fields.routingKey === 'runner.execute' && msg.id && msg.source && msg.componentType) {
             startRunner(msg)
-            .subscribe(res => {
+            .subscribe(({id, response}) => {
+                logger.debug('respose:', response);
                 // publish response
-                channel.publish(rabbit.exchange, 'runner.result.' + msg.id, new Buffer(JSON.stringify(res)));
+                channel.publish(rabbit.exchange, 'runner.result.' + id, new Buffer(JSON.stringify(response)));
             });
         } else if (data.fields.routingKey === 'runner.kill' && msg.id && tasks[msg.id]) {
             tasks[msg.id].kill();
