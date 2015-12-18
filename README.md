@@ -23,7 +23,7 @@ For Exynize component runner to function properly, you'll need to have following
 
 - node.js v4.x or later
 - npm v3.x or later
-- docker (used to start RethinkDB and RabbitMQ) or RethinkDB and RabbitMQ
+- docker (used to start RabbitMQ) or RabbitMQ
 
 Alternatively you can use docker environment provided with a supplied Dockerfile.
 
@@ -31,12 +31,12 @@ Alternatively you can use docker environment provided with a supplied Dockerfile
 
 1. Clone the repository and cd into new folder: `git clone git@github.com:Exynize/exynize-rest.git && cd exynize-rest`
 2. Execute `npm install`
-3. Execute `npm start` (this will also start a docker container with RethinkDB)
+3. Execute `npm start` (this will also start a docker container with RabbitMQ)
 4. Exynize component runner will start working and listening for commands from RabbitMQ
 
-If you have local RethinkDB and RabbitMQ instances, you can just use `npm run server` in step 3.
+If you have local RabbitMQ instance, you can just use `npm run server` in step 3.
 
-Alternatively, you can use Dockerfile to assemble docker container and then start it with a link to your RethinkDB and RabbitMQ instances.
+Alternatively, you can use Dockerfile to assemble docker container and then start it with a link to your RabbitMQ instance.
 
 ## License
 

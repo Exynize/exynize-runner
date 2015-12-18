@@ -1,30 +1,35 @@
-import {Component} from '../db';
 import {transpileCode, extractRequires, installNodeModule} from '../code';
 import {runInVm} from '../vm';
 
-const [,, id] = process.argv;
+const log = (msg) => process.send({type: 'result', data: `[log]: ${msg}`});
 
-console.log('forked process for:', id);
+// get component info
+const [,, componentJSON] = process.argv;
+const component = JSON.parse(componentJSON);
 
-const run = async (componentId) => {
-    // find component in db
-    const comp = await Component.find(componentId);
-    console.log('got comp:', comp.name);
+const run = async (comp) => {
     // transpile source
     const source = transpileCode(comp.source);
     // extract package names from require statements
     const requires = extractRequires(source);
-    console.log('got requires:', requires);
-    // install all requires
-    for (const pkg of requires) {
-        await installNodeModule(pkg);
-        console.log('installed', pkg);
+    // only install and log progress if there are any deps
+    if (requires.length > 0) {
+        log(`installing requires: ${requires.map(r => `'${r}'`).join(', ')}`);
+        // install all requires
+        for (const pkg of requires) {
+            await installNodeModule(pkg);
+            log(`installed ${pkg}`);
+        }
+        log(`all dependencies installed! running...`);
     }
-    console.log('running...');
     // run
-    runInVm(source, comp.args, comp.type)
-    .subscribe(res => console.log('result:', res));
+    runInVm(source, comp.args, comp.componentType)
+    .subscribe(
+        res => process.send({type: 'result', data: res}),
+        e => process.send({type: 'error', data: e}),
+        () => process.send({type: 'done', data: true}),
+    );
 };
 
-run(id)
-.catch(e => console.error(e));
+// run and catch errors
+run(component).catch(e => process.send({type: 'error', data: e}));

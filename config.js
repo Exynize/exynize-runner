@@ -1,6 +1,4 @@
-export const db = {
-    host: process.env.EXYNIZE_DB_HOST || 'docker.dev',
-    database: process.env.EXYNIZE_DB_NAME || 'exynizedb',
-    user: '',
-    password: '',
+export const rabbit = {
+    host: process.env.RABBITMQ_NODENAME || 'docker.dev',
+    exchange: 'exynize.components.exchange',
 };
