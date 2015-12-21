@@ -24,7 +24,6 @@ const listen = async () => {
     // listen for messages
     channel.consume(queue, (data) => {
         const msg = JSON.parse(data.content.toString());
-        logger.debug('got message:', msg, 'from:', data.fields.routingKey);
         // work with command
         if (routeHandlers[data.fields.routingKey]) {
             routeHandlers[data.fields.routingKey](channel, data, msg);

@@ -28,6 +28,10 @@ export default (channel, data, msg) => {
         channel.reject(data);
         return;
     }
+
+    // log
+    logger.debug('got execute request:', msg);
+
     // start
     startRunner(msg)
     .subscribe(({id, response}) => {
