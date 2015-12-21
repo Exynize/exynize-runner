@@ -1,5 +1,4 @@
 import Rx from 'rx';
-import uuid from 'node-uuid';
 import amqp from 'amqplib';
 import {rabbit} from '../config';
 import {join} from 'path';
@@ -37,13 +36,12 @@ const listen = async () => {
     await channel.assertExchange(rabbit.exchange, 'topic');
     logger.debug('got exchanges');
     // assig queue
-    const queueId = uuid.v1();
-    const {queue} = await channel.assertQueue(`exynize-runner-queue-${queueId}`, {exclusive: true});
+    const {queue} = await channel.assertQueue(`exynize-runner-queue`);
     logger.debug('got queue');
     // bind to keys
-    await channel.bindQueue(queue, rabbit.exchange, 'runner.execute.#');
-    await channel.bindQueue(queue, rabbit.exchange, 'runner.kill.#');
-    await channel.bindQueue(queue, rabbit.exchange, 'runner.command.#');
+    await channel.bindQueue(queue, rabbit.exchange, 'runner.execute');
+    await channel.bindQueue(queue, rabbit.exchange, 'runner.kill');
+    await channel.bindQueue(queue, rabbit.exchange, 'runner.command');
     logger.debug('bound queue, consuming...');
     // listen for messages
     channel.consume(queue, (data) => {
@@ -57,14 +55,26 @@ const listen = async () => {
                 // publish response
                 channel.publish(rabbit.exchange, 'runner.result.' + id, new Buffer(JSON.stringify(response)));
             });
-        } else if (data.fields.routingKey === 'runner.kill' && msg.id && tasks[msg.id]) {
-            tasks[msg.id].kill();
-            delete tasks[msg.id];
-        } else if (data.fields.routingKey === 'runner.command' && msg.id && tasks[msg.id]) {
-            tasks[msg.id].send(msg);
+            // acknowledge
+            channel.ack(data);
+        } else if (data.fields.routingKey === 'runner.kill') {
+            if (msg.id && tasks[msg.id]) {
+                tasks[msg.id].kill();
+                delete tasks[msg.id];
+                // acknowledge
+                channel.ack(data);
+            } else { // reject
+                channel.reject(data);
+            }
+        } else if (data.fields.routingKey === 'runner.command') {
+            if (msg.id && tasks[msg.id]) {
+                tasks[msg.id].send(msg);
+                // acknowledge
+                channel.ack(data);
+            } else { // reject
+                channel.reject(data);
+            }
         }
-        // acknowledge
-        channel.ack(data);
     });
 };
 
