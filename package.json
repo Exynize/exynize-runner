@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-docker": "docker build -t exynize-runner .",
+    "start-docker": "docker run -it --rm --link exynize-rabbit:rabbit -e RABBITMQ_NODENAME=rabbit --name exynize-runner exynize-runner"
   },
   "author": "Tim Ermilov <yamalight@gmail.com> (http://codezen.net)",
   "license": "SEE LICENSE IN LICENSE.md",
