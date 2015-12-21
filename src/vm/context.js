@@ -1,20 +1,20 @@
 import Rx from 'rx';
 import React from 'react';
 
-// hacky mocks of window, document, etc for leaflet
-// TODO: find better solution (jsdom?)
-global.window = {};
-global.document = {
-    documentElement: {style: []},
-    getElementsByTagName: () => [],
-    createElement: () => ({getContext: () => {}}),
-};
-global.navigator = {userAgent: 'node'};
-
 const context = {
     // dummy module and exports for babel
     module: {},
     exports: {},
+
+    // hacky mocks of window, document, etc for stuff like leaflet.js
+    // TODO: find better solution (jsdom too heavy?)
+    window: {},
+    document: {
+        documentElement: {style: []},
+        getElementsByTagName: () => [],
+        createElement: () => ({getContext: () => {}}),
+    },
+    navigator: {userAgent: 'node'},
 
     // expose default tick functions
     setTimeout,

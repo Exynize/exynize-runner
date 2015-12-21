@@ -1,29 +1,7 @@
-import Rx from 'rx';
 import amqp from 'amqplib';
 import {rabbit} from '../config';
-import {join} from 'path';
-import {fork} from 'child_process';
 import logger from './logger';
-
-// running tasks
-const tasks = {};
-
-// start runner function
-const startRunner = (data) => Rx.Observable.create(obs => {
-    // fork child
-    const child = fork(join(__dirname, 'runner', 'index.js'), [JSON.stringify(data)]);
-    // store to running
-    tasks[data.id] = child;
-    // listen for messages
-    child.on('message', response => {
-        logger.debug('sending resp from', data.id, 'data: ', response);
-        obs.onNext({id: data.id, response});
-        // only complete runner on test runs
-        if (response.type === 'done' && data.mode === 'test') {
-            obs.onCompleted();
-        }
-    });
-});
+import {executeRoute, killRoute, commandRoute, routeHandlers} from './handlers';
 
 const listen = async () => {
     // connect
@@ -39,42 +17,21 @@ const listen = async () => {
     const {queue} = await channel.assertQueue(`exynize-runner-queue`);
     logger.debug('got queue');
     // bind to keys
-    await channel.bindQueue(queue, rabbit.exchange, 'runner.execute');
-    await channel.bindQueue(queue, rabbit.exchange, 'runner.kill');
-    await channel.bindQueue(queue, rabbit.exchange, 'runner.command');
+    await channel.bindQueue(queue, rabbit.exchange, executeRoute);
+    await channel.bindQueue(queue, rabbit.exchange, killRoute);
+    await channel.bindQueue(queue, rabbit.exchange, commandRoute);
     logger.debug('bound queue, consuming...');
     // listen for messages
     channel.consume(queue, (data) => {
         const msg = JSON.parse(data.content.toString());
         logger.debug('got message:', msg, 'from:', data.fields.routingKey);
-        // only run if has all needed fields
-        if (data.fields.routingKey === 'runner.execute' && msg.id && msg.source && msg.componentType) {
-            startRunner(msg)
-            .subscribe(({id, response}) => {
-                logger.debug('respose:', response);
-                // publish response
-                channel.publish(rabbit.exchange, 'runner.result.' + id, new Buffer(JSON.stringify(response)));
-            });
-            // acknowledge
-            channel.ack(data);
-        } else if (data.fields.routingKey === 'runner.kill') {
-            if (msg.id && tasks[msg.id]) {
-                tasks[msg.id].kill();
-                delete tasks[msg.id];
-                // acknowledge
-                channel.ack(data);
-            } else { // reject
-                channel.reject(data);
-            }
-        } else if (data.fields.routingKey === 'runner.command') {
-            if (msg.id && tasks[msg.id]) {
-                tasks[msg.id].send(msg);
-                // acknowledge
-                channel.ack(data);
-            } else { // reject
-                channel.reject(data);
-            }
+        // work with command
+        if (routeHandlers[data.fields.routingKey]) {
+            routeHandlers[data.fields.routingKey](channel, data, msg);
+            return;
         }
+        // if handler not found - reject message
+        channel.reject(data);
     });
 };
 

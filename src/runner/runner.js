@@ -40,7 +40,7 @@ const run = async (comp) => {
     }
 
     // if not running in test mode and not source
-    // otherwise listen for outside messages for re-execution
+    // listen for outside messages for re-execution
     process.on('message', msg => {
         const args = [...comp.args, msg.data];
         exec(args);
