@@ -35,4 +35,15 @@ const listen = async () => {
 };
 
 // start listening & catch errors
-listen().catch(e => console.error(e));
+const start = () => listen()
+.catch(e => {
+    if (e.code === 'ECONNREFUSED') {
+        logger.info(`Couldn't connect to rabbit, retrying in 5s...`);
+        setTimeout(start, 5000);
+        return;
+    }
+    logger.error(e);
+});
+
+// init start
+start();
