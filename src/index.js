@@ -1,4 +1,5 @@
 import Rx from 'rx';
+import uuid from 'node-uuid';
 import amqp from 'amqplib';
 import {rabbit} from '../config';
 import {join} from 'path';
@@ -36,7 +37,8 @@ const listen = async () => {
     await channel.assertExchange(rabbit.exchange, 'topic');
     logger.debug('got exchanges');
     // assig queue
-    const {queue} = await channel.assertQueue('exynize-runner-queue', {exclusive: true});
+    const queueId = uuid.v1();
+    const {queue} = await channel.assertQueue(`exynize-runner-queue-${queueId}`, {exclusive: true});
     logger.debug('got queue');
     // bind to keys
     await channel.bindQueue(queue, rabbit.exchange, 'runner.execute.#');
