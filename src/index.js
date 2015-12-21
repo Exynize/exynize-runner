@@ -21,6 +21,7 @@ const listen = async () => {
     await channel.bindQueue(queue, rabbit.exchange, killRoute);
     await channel.bindQueue(queue, rabbit.exchange, commandRoute);
     logger.debug('bound queue, consuming...');
+    logger.info('connected to rabbit, consuming...');
     // listen for messages
     channel.consume(queue, (data) => {
         const msg = JSON.parse(data.content.toString());
