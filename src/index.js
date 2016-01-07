@@ -1,7 +1,7 @@
 import amqp from 'amqplib';
 import {rabbit} from '../config';
 import logger from './logger';
-import {executeRoute, killRoute, commandRoute, routeHandlers} from './handlers';
+import {executeRoute, killRoute, commandRoute, compileRoute, routeHandlers} from './handlers';
 
 const listen = async () => {
     // connect
@@ -20,6 +20,7 @@ const listen = async () => {
     await channel.bindQueue(queue, rabbit.exchange, executeRoute);
     await channel.bindQueue(queue, rabbit.exchange, killRoute);
     await channel.bindQueue(queue, rabbit.exchange, commandRoute);
+    await channel.bindQueue(queue, rabbit.exchange, compileRoute);
     logger.debug('bound queue, consuming...');
     logger.info('connected to rabbit, consuming...');
     // listen for messages
@@ -30,6 +31,8 @@ const listen = async () => {
             routeHandlers[data.fields.routingKey](channel, data, msg);
             return;
         }
+        // error
+        logger.error('got message with no handler:', data);
         // if handler not found - reject message
         channel.reject(data);
     });
