@@ -23,13 +23,13 @@ const run = async (comp) => {
         log(`all dependencies installed! running...`);
     }
     // create exec function
-    const exec = (args) => {
+    const exec = (args, responseId) => {
         // run
         runInVm(source, args, comp.componentType)
         .subscribe(
-            res => process.send({type: 'result', data: res}),
-            e => process.send({type: 'error', data: e}),
-            () => process.send({type: 'done', data: true}),
+            res => process.send({type: 'result', data: res, responseId}),
+            e => process.send({type: 'error', data: e, responseId}),
+            () => process.send({type: 'done', data: true, responseId}),
         );
     };
     // if test mode or source
@@ -43,7 +43,7 @@ const run = async (comp) => {
     // listen for outside messages for re-execution
     process.on('message', msg => {
         const args = [...comp.args, msg.data];
-        exec(args);
+        exec(args, msg.responseId);
     });
 };
 
