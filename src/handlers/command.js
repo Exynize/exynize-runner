@@ -8,7 +8,7 @@ export default (channel, data, msg) => {
     }
 
     // log
-    logger.debug('got command request:', msg);
+    logger.debug('got command request:', msg.id);
 
     // pass command
     tasks[msg.id].send(msg);

@@ -13,7 +13,7 @@ const startRunner = (data) => Rx.Observable.create(obs => {
     tasks[data.id] = child;
     // listen for messages
     child.on('message', response => {
-        logger.debug('sending resp from', data.id, 'to', response.responseId, 'data: ', response);
+        logger.debug('sending resp from', data.id, 'to', response.responseId, 'type:', response.type);
         obs.onNext({id: data.id, response});
         // only complete runner on test runs
         if (response.type === 'done' && data.mode === 'test') {
@@ -35,7 +35,7 @@ export default (channel, data, msg) => {
     // start
     startRunner(msg)
     .subscribe(({id, response}) => {
-        logger.debug('respose from:', id, 'to', response.responseId, 'data:', response);
+        logger.debug('respose from:', id, 'to', response.responseId, 'type:', response.type);
         // publish response
         const rid = response.responseId || id;
         channel.publish(rabbit.exchange, 'runner.result.' + rid, new Buffer(JSON.stringify(response)));
