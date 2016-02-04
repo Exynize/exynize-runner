@@ -1,9 +1,9 @@
 import {tasks} from './index';
 import logger from '../logger';
 
-export default (channel, data, msg) => {
+export default (msg, _, ack, nack) => {
     if (!msg.id || !tasks[msg.id]) {
-        channel.reject(data);
+        nack();
         return;
     }
 
@@ -14,5 +14,5 @@ export default (channel, data, msg) => {
     tasks[msg.id].kill();
     delete tasks[msg.id];
     // acknowledge
-    channel.ack(data);
+    ack();
 };

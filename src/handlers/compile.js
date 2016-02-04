@@ -1,10 +1,9 @@
 import compile from '../webpack/compile';
-import {rabbit} from '../../config';
 import logger from '../logger';
 
-export default (channel, data, msg) => {
+export default (msg, reply, ack, nack) => {
     if (!msg.id || !msg.source) {
-        channel.reject(data);
+        nack();
         return;
     }
 
@@ -15,15 +14,13 @@ export default (channel, data, msg) => {
     compile(msg)
     .then(res => {
         logger.debug('done compiling, sending result back...');
-        channel.publish(rabbit.exchange, 'runner.compileResult.' + msg.id, new Buffer(JSON.stringify({data: res})));
+        reply('runner.compileResult.' + msg.id, {data: res});
     })
     .catch(err => {
         logger.error('error compiling webpack:', err);
         // publish response
-        channel.publish(rabbit.exchange, 'runner.compileResult.' + msg.id, new Buffer(JSON.stringify({
-            error: err.toString()
-        })));
+        reply('runner.compileResult.' + msg.id, {error: err.toString()});
     });
     // acknowledge
-    channel.ack(data);
+    ack();
 };

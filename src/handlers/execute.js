@@ -3,7 +3,6 @@ import {join} from 'path';
 import {fork} from 'child_process';
 import logger from '../logger';
 import {tasks} from './index';
-import {rabbit} from '../../config';
 
 // start runner function
 const startRunner = (data) => Rx.Observable.create(obs => {
@@ -22,10 +21,10 @@ const startRunner = (data) => Rx.Observable.create(obs => {
     });
 });
 
-export default (channel, data, msg) => {
+export default (msg, reply, ack, nack) => {
     // if no needed data present - reject
     if (!msg.id || !msg.source || !msg.componentType) {
-        channel.reject(data);
+        nack();
         return;
     }
 
@@ -38,8 +37,8 @@ export default (channel, data, msg) => {
         logger.debug('respose from:', id, 'to', response.responseId, 'type:', response.type);
         // publish response
         const rid = response.responseId || id;
-        channel.publish(rabbit.exchange, 'runner.result.' + rid, new Buffer(JSON.stringify(response)));
+        reply('runner.result.' + rid, response);
     });
     // acknowledge
-    channel.ack(data);
+    ack();
 };

@@ -4,10 +4,10 @@ import command from './command';
 import compile from './compile';
 
 // commands constants
-export const executeRoute = 'runner.execute';
-export const killRoute = 'runner.kill';
-export const commandRoute = 'runner.command';
-export const compileRoute = 'runner.compile';
+const executeRoute = 'runner.execute';
+const killRoute = 'runner.kill';
+const commandRoute = 'runner.command';
+const compileRoute = 'runner.compile';
 
 // running tasks
 export const tasks = {};

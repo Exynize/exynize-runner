@@ -1,9 +1,10 @@
 import {tasks} from './index';
 import logger from '../logger';
 
-export default (channel, data, msg) => {
+export default (msg, _, ack, nack) => {
     if (!msg.id || !tasks[msg.id]) {
-        channel.reject(data);
+        logger.debug('got command, task not found:', JSON.stringify(msg));
+        nack();
         return;
     }
 
@@ -13,5 +14,5 @@ export default (channel, data, msg) => {
     // pass command
     tasks[msg.id].send(msg);
     // acknowledge
-    channel.ack(data);
+    ack();
 };
