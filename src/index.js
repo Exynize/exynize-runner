@@ -11,3 +11,8 @@ Object.keys(routeHandlers).forEach(async (topic) => {
     await runner.subscribe(topic, handler, {}, {}, {ack: false});
     logger.debug('subscribed to:', topic);
 });
+// cleanup on exit
+process.on('beforeExit', async () => {
+    logger.debug('runner about to exit, closing connections...');
+    await runner.stop();
+});
