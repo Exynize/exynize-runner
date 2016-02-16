@@ -1,6 +1,6 @@
 {
   "name": "exynize-runner",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Exynize standalone component runner",
   "main": "index.js",
   "scripts": {
