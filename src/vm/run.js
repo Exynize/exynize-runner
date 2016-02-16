@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import {Observable, Subject} from 'rx';
-import {compileInVm} from './compile';
 
-export const runInVm = (jsString, args = [], componentType = 'processor') => {
+export const runWithVm = (vmFunction, args = [], componentType = 'processor') => {
     const compiledArgs = args.map(arg => {
         try {
             const newArg = JSON.parse(arg);
@@ -12,7 +11,6 @@ export const runInVm = (jsString, args = [], componentType = 'processor') => {
             return arg;
         }
     });
-    const vmFunction = compileInVm(jsString);
     if (componentType === 'processor') {
         const functionResult = vmFunction(...compiledArgs);
         return functionResult;
