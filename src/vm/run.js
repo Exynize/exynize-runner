@@ -30,7 +30,15 @@ export const runWithVm = (vmFunction, args = [], componentType = 'processor') =>
         const Component = vmFunction();
         const props = {data: compiledArgs[0]};
         const element = React.createElement(Component, props);
-        return Observable.return(ReactDOMServer.renderToString(element));
+        return Observable.create(obs => {
+            try {
+                const res = ReactDOMServer.renderToString(element);
+                obs.onNext(res);
+                obs.onCompleted();
+            } catch (err) {
+                obs.onError(err);
+            }
+        });
     }
 
     throw new Error('Unknown component type:', componentType);
