@@ -29,12 +29,10 @@ Alternatively you can use docker environment provided with a supplied Dockerfile
 
 ### Installation
 
-1. Clone the repository and cd into new folder: `git clone git@github.com:Exynize/exynize-rest.git && cd exynize-rest`
+1. Clone the repository and cd into new folder: `git clone git@github.com:Exynize/exynize-runner.git && cd exynize-runner`
 2. Execute `npm install`
-3. Execute `npm start` (this will also start a docker container with RabbitMQ)
+3. Execute `npm start` (you must have RabbitMQ running!)
 4. Exynize component runner will start working and listening for commands from RabbitMQ
-
-If you have local RabbitMQ instance, you can just use `npm run server` in step 3.
 
 Alternatively, you can use Dockerfile to assemble docker container and then start it with a link to your RabbitMQ instance.
 

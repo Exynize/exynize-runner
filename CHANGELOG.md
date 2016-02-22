@@ -1,5 +1,10 @@
 # Changelog
 
+0.7.0 / 2016-02-22
+==================
+
+  * correctly catch render component errors
+
 0.6.0 / 2016-02-16
 ==================
 
