@@ -17,3 +17,6 @@ process.on('beforeExit', async () => {
     logger.debug('runner about to exit, closing connections...');
     await runner.stop();
 });
+// output all uncaught exceptions
+process.on('uncaughtException', err => logger.error('uncaught exception:', err));
+process.on('unhandledRejection', error => logger.error('unhandled rejection:', error));
