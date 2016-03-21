@@ -2,6 +2,7 @@ import _ from 'lodash';
 import logger from '../logger';
 import {transpileCode, extractRequires, installNodeModule} from '../code';
 import {runWithVm, compileInVm} from '../vm';
+import stringifyError from '../util/stringifyError';
 
 // get component info
 const [,, componentJSON] = process.argv;
@@ -18,6 +19,9 @@ const handleRequest = (vmFunction, data) => {
         logger.debug('handling request with "', prop, '" function');
         return vmFunction.routeHandler[prop](data);
     }
+
+    // return no-op
+    return () => {};
 };
 
 const run = async (comp) => {
@@ -40,12 +44,26 @@ const run = async (comp) => {
     const vmFunction = compileInVm(source);
     // create exec function
     const exec = (args, responseId) => {
+        // also handle all uncaught exceptions
+        const handleError = err => process.send({type: 'error', data: stringifyError(err), responseId});
+        const cleanErrorHandlers = () => {
+            process.removeListener('uncaughtException', handleError);
+            process.removeListener('unhandledRejection', handleError);
+        };
+        process.on('uncaughtException', handleError);
+        process.on('unhandledRejection', handleError);
         // run
         runWithVm(vmFunction.default, args, comp.componentType)
         .subscribe(
             res => process.send({type: 'result', data: res, responseId}),
-            e => process.send({type: 'error', data: e, responseId}),
-            () => process.send({type: 'done', data: true, responseId}),
+            e => {
+                process.send({type: 'error', data: stringifyError(e), responseId});
+                cleanErrorHandlers();
+            },
+            () => {
+                process.send({type: 'done', data: true, responseId});
+                cleanErrorHandlers();
+            },
         );
     };
 
@@ -76,4 +94,4 @@ const run = async (comp) => {
 };
 
 // run and catch errors
-run(component).catch(e => process.send({type: 'error', data: e}));
+run(component).catch(e => process.send({type: 'error', data: stringifyError(e)}));
