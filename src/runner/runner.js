@@ -44,9 +44,14 @@ const run = async (comp) => {
     const vmFunction = compileInVm(source);
     // create exec function
     const exec = (args, responseId) => {
+        let cleanErrorHandlers = () => {};
         // also handle all uncaught exceptions
-        const handleError = err => process.send({type: 'error', data: stringifyError(err), responseId});
-        const cleanErrorHandlers = () => {
+        const handleError = err => {
+            process.send({type: 'error', data: stringifyError(err), responseId});
+            cleanErrorHandlers();
+        };
+        // define clean function
+        cleanErrorHandlers = () => {
             process.removeListener('uncaughtException', handleError);
             process.removeListener('unhandledRejection', handleError);
         };
